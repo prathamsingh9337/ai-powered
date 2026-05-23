@@ -33,7 +33,7 @@ const ChatPage = () => {
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/chat");
+        const res = await fetch("https://ai-powered-api-dgnb.onrender.com/api/chat");
         const data = await res.json();
         setChatHistory(data);
       } catch (err) {
