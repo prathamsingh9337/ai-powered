@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
     const completion =
       await client.chat.completions.create({
 
-      model: "openai/gpt-3.5-turbo",
+     model: "openai/gpt-3.5-turbo-0125",,
 
       messages: [
         {
