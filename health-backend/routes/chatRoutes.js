@@ -4,6 +4,9 @@ const router = express.Router();
 
 const OpenAI = require("openai");
 
+const createRetriever =
+  require("../rag/retriever");
+
 const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
 
@@ -17,24 +20,36 @@ router.post("/", async (req, res) => {
 
     const { userMessage } = req.body;
 
-    if (!userMessage) {
-      return res.status(400).json({
-        error: "userMessage required",
-      });
-    }
+    // RETRIEVE RELEVANT DOCS
+    const retriever =
+      await createRetriever();
 
+    const relevantDocs =
+      await retriever.invoke(userMessage);
+
+    // CREATE CONTEXT
+    const context =
+      relevantDocs
+        .map(doc => doc.pageContent)
+        .join("\n");
+
+    // SEND TO AI
     const completion =
       await client.chat.completions.create({
 
-      model:
-        "mistralai/mistral-7b-instruct",
+      model: "openai/gpt-3.5-turbo",
 
       messages: [
         {
           role: "system",
 
-          content:
-            "You are an AI health assistant.",
+          content: `
+You are an AI health assistant.
+
+Use this medical context:
+
+${context}
+          `,
         },
 
         {
@@ -58,8 +73,7 @@ router.post("/", async (req, res) => {
     console.log(error);
 
     res.status(500).json({
-      error:
-        "AI request failed",
+      error: "RAG failed",
     });
   }
 });
