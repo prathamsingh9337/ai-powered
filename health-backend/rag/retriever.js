@@ -1,10 +1,14 @@
 const {
   MemoryVectorStore,
-} = require("langchain/vectorstores/memory");
+} = require(
+  "@langchain/community/vectorstores/memory"
+);
 
 const {
   RecursiveCharacterTextSplitter,
-} = require("@langchain/textsplitters");
+} = require(
+  "@langchain/textsplitters"
+);
 
 const {
   pipeline,
