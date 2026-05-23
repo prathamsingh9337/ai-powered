@@ -1,90 +1,39 @@
 const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
 
-const router = express.Router();
+dotenv.config();
 
-const OpenAI = require("openai");
+const app = express();
 
-const createRetriever =
-  require("../rag/retriever");
+app.use(cors({
+  origin: "*",
+}));
 
-const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
+app.use(express.json());
 
-  apiKey:
-    process.env.OPENROUTER_API_KEY,
+const chatRoutes =
+  require("./routes/chatRoutes");
+
+app.use("/api/chat", chatRoutes);
+
+app.get("/", (req, res) => {
+  res.send(
+    "AI Health Backend Running 🚀"
+  );
 });
 
-router.post("/", async (req, res) => {
-
-  try {
-
-    const { userMessage } = req.body;
-
-    // VALIDATION
-    if (!userMessage) {
-      return res.status(400).json({
-        error: "userMessage is required",
-      });
-    }
-
-    // RETRIEVE RELEVANT DOCS
-    const retriever =
-      await createRetriever();
-
-    const relevantDocs =
-      await retriever.invoke(userMessage);
-
-    // CREATE CONTEXT
-    const context =
-      relevantDocs
-        .map(doc => doc.pageContent)
-        .join("\n");
-
-    // SEND TO AI
-    const completion =
-      await client.chat.completions.create({
-
-      model:
-        "mistralai/mistral-7b-instruct",
-
-      messages: [
-        {
-          role: "system",
-
-          content: `
-You are an AI health assistant.
-
-Use this medical context:
-
-${context}
-          `,
-        },
-
-        {
-          role: "user",
-
-          content: userMessage,
-        },
-      ],
-    });
-
-    const botReply =
-      completion.choices[0]
-        .message.content;
-
-    res.json({
-      botReply,
-    });
-
-  } catch (error) {
-
-    console.log("❌ CHAT ERROR:", error);
-
-    res.status(500).json({
-      error: "RAG failed",
-      details: error.message,
-    });
-  }
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+  });
 });
 
-module.exports = router;
+const PORT =
+  process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(
+    `🚀 Server running on port ${PORT}`
+  );
+});
