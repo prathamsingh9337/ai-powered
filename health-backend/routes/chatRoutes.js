@@ -20,6 +20,13 @@ router.post("/", async (req, res) => {
 
     const { userMessage } = req.body;
 
+    // VALIDATION
+    if (!userMessage) {
+      return res.status(400).json({
+        error: "userMessage is required",
+      });
+    }
+
     // RETRIEVE RELEVANT DOCS
     const retriever =
       await createRetriever();
@@ -37,7 +44,8 @@ router.post("/", async (req, res) => {
     const completion =
       await client.chat.completions.create({
 
-     model: "openai/gpt-3.5-turbo-0125",,
+      model:
+        "mistralai/mistral-7b-instruct",
 
       messages: [
         {
@@ -70,10 +78,11 @@ ${context}
 
   } catch (error) {
 
-    console.log(error);
+    console.log("❌ CHAT ERROR:", error);
 
     res.status(500).json({
       error: "RAG failed",
+      details: error.message,
     });
   }
 });
