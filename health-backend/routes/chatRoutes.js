@@ -1,39 +1,67 @@
 const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
 
-dotenv.config();
+const router = express.Router();
 
-const app = express();
+const OpenAI = require("openai");
 
-app.use(cors({
-  origin: "*",
-}));
+const client = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
 
-app.use(express.json());
-
-const chatRoutes =
-  require("./routes/chatRoutes");
-
-app.use("/api/chat", chatRoutes);
-
-app.get("/", (req, res) => {
-  res.send(
-    "AI Health Backend Running 🚀"
-  );
+  apiKey:
+    process.env.OPENROUTER_API_KEY,
 });
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-  });
+router.post("/", async (req, res) => {
+
+  try {
+
+    const { userMessage } = req.body;
+
+    if (!userMessage) {
+      return res.status(400).json({
+        error: "userMessage required",
+      });
+    }
+
+    const completion =
+      await client.chat.completions.create({
+
+      model:
+        "mistralai/mistral-7b-instruct",
+
+      messages: [
+        {
+          role: "system",
+
+          content:
+            "You are an AI health assistant.",
+        },
+
+        {
+          role: "user",
+
+          content: userMessage,
+        },
+      ],
+    });
+
+    const botReply =
+      completion.choices[0]
+        .message.content;
+
+    res.json({
+      botReply,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      error:
+        "AI request failed",
+    });
+  }
 });
 
-const PORT =
-  process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(
-    `🚀 Server running on port ${PORT}`
-  );
-});
+module.exports = router;
