@@ -7,7 +7,7 @@ const ChatPage = () => {
   // Function to call backend and save chat
   const sendChatToBackend = async (userMessage, botReply) => {
     try {
-      await fetch("http://localhost:5000/api/chat", {
+      await fetch("https://ai-powered-api-dgnb.onrender.com/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userMessage, botReply }),
