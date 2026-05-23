@@ -1,31 +1,80 @@
 const express = require("express");
+
 const router = express.Router();
-const Chat = require("../models/Chat");
 
-// POST: save a chat
-router.post("/", async (req, res) => {
-  const { userMessage, botReply } = req.body;
+const OpenAI = require("openai");
 
-  if (!userMessage || !botReply) {
-    return res.status(400).json({ error: "Both fields are required" });
-  }
+const createRetriever =
+  require("../rag/retriever");
 
-  try {
-    const chat = new Chat({ userMessage, botReply });
-    await chat.save();
-    res.status(201).json(chat);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+const client = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+
+  apiKey:
+    process.env.OPENROUTER_API_KEY,
 });
 
-// GET: retrieve all chats
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
+
   try {
-    const chats = await Chat.find().sort({ createdAt: -1 });
-    res.status(200).json(chats);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    const { userMessage } = req.body;
+
+    // RETRIEVE RELEVANT DOCS
+    const retriever =
+      await createRetriever();
+
+    const relevantDocs =
+      await retriever.invoke(userMessage);
+
+    // CREATE CONTEXT
+    const context =
+      relevantDocs
+        .map(doc => doc.pageContent)
+        .join("\n");
+
+    // SEND TO AI
+    const completion =
+      await client.chat.completions.create({
+
+      model: "openai/gpt-3.5-turbo",
+
+      messages: [
+        {
+          role: "system",
+
+          content: `
+You are an AI health assistant.
+
+Use this medical context:
+
+${context}
+          `,
+        },
+
+        {
+          role: "user",
+
+          content: userMessage,
+        },
+      ],
+    });
+
+    const botReply =
+      completion.choices[0]
+        .message.content;
+
+    res.json({
+      botReply,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      error: "RAG failed",
+    });
   }
 });
 
