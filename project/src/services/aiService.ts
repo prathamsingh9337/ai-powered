@@ -5,7 +5,7 @@ export class AIHealthService {
 
   async processHealthData(data: HealthData): Promise<HealthSuggestion[]> {
     try {
-      const response = await fetch("http://localhost:5000/api/chat", {
+      const response = await fetch("https://ai-powered-api-dgnb.onrender.com/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
