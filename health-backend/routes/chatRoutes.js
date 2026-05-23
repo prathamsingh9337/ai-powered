@@ -26,8 +26,7 @@ router.post("/", async (req, res) => {
     const completion =
       await client.chat.completions.create({
 
-      model:
-        "mistralai/mistral-7b-instruct",
+    model: "meta-llama/llama-3-8b-instruct",
 
       messages: [
         {
