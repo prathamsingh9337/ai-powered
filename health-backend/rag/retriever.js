@@ -29,7 +29,7 @@ async function createRetriever() {
       docs.map(doc => doc.content)
     );
 
-  // FREE LOCAL EMBEDDINGS
+  // FREE EMBEDDINGS
   const extractor =
     await pipeline(
       "feature-extraction",
@@ -68,7 +68,7 @@ async function createRetriever() {
     },
   };
 
-  // USE MEMORY VECTOR STORE
+  // MEMORY VECTOR STORE
   const vectorStore =
     await MemoryVectorStore.fromDocuments(
       splitDocs,
